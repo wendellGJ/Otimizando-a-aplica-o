@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+
+import { api } from './services/api';
 
 import { SideBar } from './components/SideBar';
 import { Content } from './components/Content';
 
-import { api } from './services/api';
-
 import './styles/global.scss';
-
 import './styles/sidebar.scss';
 import './styles/content.scss';
 
@@ -17,7 +16,6 @@ interface GenreResponseProps {
 }
 
 interface MovieProps {
-  imdbID: string;
   Title: string;
   Poster: string;
   Ratings: Array<{
@@ -29,9 +27,7 @@ interface MovieProps {
 
 export function App() {
   const [selectedGenreId, setSelectedGenreId] = useState(1);
-
   const [genres, setGenres] = useState<GenreResponseProps[]>([]);
-
   const [movies, setMovies] = useState<MovieProps[]>([]);
   const [selectedGenre, setSelectedGenre] = useState<GenreResponseProps>({} as GenreResponseProps);
 
@@ -51,22 +47,44 @@ export function App() {
     })
   }, [selectedGenreId]);
 
-  function handleClickButton(id: number) {
+  const handleClickButton = useCallback((id: number) => {
     setSelectedGenreId(id);
-  }
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'row' }}>
-      <SideBar
-        genres={genres}
-        selectedGenreId={selectedGenreId}
-        buttonClickCallback={handleClickButton}
-      />
+      <nav className="sidebar">
+        <span>Watch<p>Me</p></span>
 
-      <Content
-        selectedGenre={selectedGenre}
-        movies={movies}
-      />
+        <div className="buttons-container">
+          {genres.map(genre => {
+            return (
+              <SideBar 
+                key={genre.id}
+                genre={genre}
+                handleClickButton={handleClickButton}
+                selectedGenreId={selectedGenreId}
+              />
+            )         
+          })}
+        </div>
+      </nav>
+
+      <div className="container">
+        <header>
+          <span className="category">Categoria:<span> {selectedGenre.title}</span></span>
+        </header>
+
+        <main>
+          <div className="movies-list">
+            {movies.map(movie => {
+              return <Content key={movie.Title} movie={movie} />
+            })}
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
+
+// implementar virtualização na listagem dos movies 
